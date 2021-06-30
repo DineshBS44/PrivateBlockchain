@@ -27,7 +27,7 @@ class Block {
         return new Promise((resolve, reject) => {
             // Save in auxiliary variable the current block hash
             let hashAux = self.hash;
-            self.hash = "";
+            self.hash = null;
 
             // Recalculate the hash of the Block
             let hash = SHA256(JSON.stringify(self)).toString();
