@@ -127,11 +127,9 @@ class Blockchain {
     getBlockByHash(hash) {
         let self = this;
         return new Promise((resolve, reject) => {
-            var filteredArray = self.chain.filter(function (e1) {
-                return e1.hash === hash;
-            });
-            if (filteredArray.length > 0) {
-                resolve(filteredArray[0]);
+            var block = self.chain.find((obj) => obj.hash === hash);
+            if (block) {
+                resolve(block);
             } else {
                 reject("Such a block doesn't exist");
             }
