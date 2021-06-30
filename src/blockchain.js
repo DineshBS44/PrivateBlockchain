@@ -45,13 +45,28 @@ class Blockchain {
             block.height = self.height + 1;
             if (self.height > -1) {
                 // Not a genesis block
-                var previousBlockHash = this.chain[this.chain.length - 1].hash;
+                var previousBlockHash = self.chain[self.chain.length - 1].hash;
                 block.previousBlockHash = previousBlockHash;
             }
             block.hash = SHA256(JSON.stringify(block)).toString();
             self.height += 1;
-            this.chain.push(block);
-            resolve(block);
+            self.chain.push(block);
+            await self.validateChain()
+                .then((errorLog) => {
+                    if (errorLog.length > 0) {
+                        console.log("The chain is not valid:");
+                        errorLog.forEach((error) => {
+                            console.log(error);
+                        });
+                        reject('The chain is broken');
+                    } else {
+                        resolve(block);
+                    }
+                })
+                .catch((error) => {
+                    console.log(error);
+                    reject('An error has occurred');
+                });
         });
     }
 
@@ -181,23 +196,21 @@ class Blockchain {
         let self = this;
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
-            for (var i = 0; i < self.chain.length - 1; i++) {
+            for (var i = 0; i < self.chain.length; i++) {
                 await self.chain[i].validate().then((result) => {
                     if (!result) {
                         errorLog.push(i);
                     }
                 });
-                let blockHash = self.chain[i].hash;
-                let previousHash = self.chain[i + 1].previousBlockHash;
-                if (blockHash !== previousHash) {
-                    errorLog.push(i);
+                if (i < self.chain.length - 1) {
+                    let blockHash = self.chain[i].hash;
+                    let previousHash = self.chain[i + 1].previousBlockHash;
+                    if (blockHash !== previousHash) {
+                        errorLog.push(i);
+                    }
                 }
             }
-            if (errorLog.length > 0) {
-                reject("Error log is" + errorLog);
-            } else {
-                resolve("The blockchain is valid");
-            }
+            resolve(errorLog);
         });
     }
 }
